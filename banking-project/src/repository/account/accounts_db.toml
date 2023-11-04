@@ -1,0 +1,15 @@
+[accounts.1]
+id = "200da69c-6de0-4898-a365-f71ccabf5815"
+account_number = 1232
+holder_name = "Kauan"
+national_registration = "00.000.000/0001-91"
+balance = 0
+is_pj = true
+
+[accounts.2]
+id = "b93bf85c-fc0c-4c85-866e-8034b134ea8c"
+account_number = 1232
+holder_name = "Kauan"
+national_registration = "170.670.957-94"
+balance = 0
+is_pj = false
