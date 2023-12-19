@@ -1,9 +1,9 @@
-import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
-from data.parser import parse_xlsx
 
-x_axis, y_axis = parse_xlsx('Tacômetro', 'Rotação')
+from data.parser import DataParser
+from utils.constants import XLSX_PATH
+
+x_axis, y_axis = DataParser(XLSX_PATH).parse_xlsx('Tacômetro', 'Rotação')
 
 
 # Plotar o gráfico
