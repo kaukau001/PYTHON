@@ -21,7 +21,7 @@ class DataParser:
         except InvalidExtensionError as e:
             print(e.message)
 
-    def parse_csv(self):
+    def parse_csv(self) -> tuple:
         try:
             self._check_file_exists()
             file_extension = self._check_file_extension()
@@ -52,7 +52,9 @@ class DataParser:
         except ValueError as e:
             print(e)
 
-    def parse_xlsx(self, x_column, y_column):
+    def parse_xlsx(self, x_column: list,
+                   y_column: list,
+                   z_column: list or None = None) -> tuple:
         try:
             self._check_file_exists()
             file_extension = self._check_file_extension()
@@ -62,9 +64,11 @@ class DataParser:
 
             data = pd.read_excel(self.file_path)
             if data.empty:
-              raise ValueError(f"O arquivo {self.file_path} está vazio.")
+                raise ValueError(f"O arquivo {self.file_path} está vazio.")
 
-            if x_column not in data.columns or y_column not in data.columns:
+            if (x_column not in data.columns
+                    or y_column not in data.columns
+                    or (z_column not in data.columns and z_column is not None)):
                 raise ValueError("As colunas especificadas não existem no conjunto de dados.")
 
             x_axis = data[x_column]
@@ -72,6 +76,11 @@ class DataParser:
 
             linearized_x = x_axis - x_axis.iloc[0]
             linearized_y = y_axis - y_axis.iloc[0]
+
+            if z_column:
+                z_axis = data[z_column]
+                linearized_z = z_axis - z_axis.iloc[0]
+                return linearized_x, linearized_y, linearized_z
 
             return linearized_x, linearized_y
         except InvalidExtensionError as e:

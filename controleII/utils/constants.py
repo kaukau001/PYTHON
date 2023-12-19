@@ -1,2 +1,5 @@
-XLSX_PATH = r'C:\Users\kauan\PycharmProjects\controleII\data\Dados.xlsx'
-CSV_PATH = r'C:\Users\kauan\PycharmProjects\controleII\data\arquivo.csv'
+XLSX_PATH = r'C:\Users\kauan\PycharmProjects\controleII\data\experiment_data.xlsx'
+CSV_PATH = r'C:\Users\kauan\PycharmProjects\controleII\data\oscilloscope_data.csv'
+ARMOR_VOLTAGE = 'Tensão'
+TACOMETER_VOLTAGE = 'Tacômetro'
+ENGINE_SPEED = 'Rotação'
