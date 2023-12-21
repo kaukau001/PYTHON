@@ -56,20 +56,29 @@ class DataParser:
             if z_column is not None:
                 if z_column not in data.columns:
                     raise ValueError("A coluna z especificada não existe no conjunto de dados.")
-
                 x_axis, y_axis, z_axis = data[x_column], data[y_column], data[z_column]
-                linearized_x, linearized_y, linearized_z = self._linearize_data(x_axis, y_axis, z_axis)
-                return linearized_x, linearized_y, linearized_z
-
+                return x_axis, y_axis, z_axis
             x_axis, y_axis = data[x_column], data[y_column]
-            linearized_x, linearized_y = self._linearize_data(x_axis, y_axis)
-
-            return linearized_x, linearized_y
-
+            return x_axis, y_axis
         except InvalidExtensionError as e:
             self.logger.error(f"Erro ao processar o arquivo: {e}")
         except ValueError as e:
             self.logger.error(f"Erro ao processar o arquivo: {e}")
+
+    def linearize_xlsx(self, x_column, y_column, z_column):
+        try:
+            x_axis, y_axis, z_axis = self.parse_xlsx(x_column, y_column, z_column)
+
+            linearized_x = self._linearize_data(x_axis)[0]
+            linearized_y = self._linearize_data(y_axis)[0]
+
+            if z_column:
+                linearized_z = self._linearize_data(z_axis)[0]
+                return linearized_x, linearized_y, linearized_z
+
+            return linearized_x, linearized_y
+        except Exception as e:
+            self.logger.error(f"Erro ao linearizar os dados: {e}")
 
     def _check_file_exists(self):
         if not os.path.exists(self.file_path):

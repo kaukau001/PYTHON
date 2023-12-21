@@ -6,11 +6,11 @@ from utils.logger import AppLogger
 
 if __name__ == '__main__':
     logger = AppLogger().get_logger()
-    xlsx_data = DataParser(XLSX_PATH)
-    csv_data = DataParser(CSV_PATH)
+    xlsx_data = DataParser(XLSX_PATH, logger)
+    csv_data = DataParser(CSV_PATH, logger)
 
     logger.warning('ANALISANDO DADOS DO EXPERIMENTO')
-    voltage, tachometer, rotation = xlsx_data.parse_xlsx(ARMOR_VOLTAGE, TACOMETER_VOLTAGE, ENGINE_SPEED)
+    voltage, tachometer, rotation = xlsx_data.linearize_xlsx(ARMOR_VOLTAGE, TACOMETER_VOLTAGE, ENGINE_SPEED)
     logger.info('DADOS DE TENSÃO DE ARMADURA, TENSÃO DO TACÔMETRO E ROTAÇÃO DO MOTOR EXTRAIDOS COM SUCESSO ')
 
     logger.warning('INICIANDO ANALISE DOS DADOS PARA A SIMULAÇÃO!')
