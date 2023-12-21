@@ -9,7 +9,7 @@ class SimulationParamsCalculator:
                  voltage: list,
                  tachometer: list,
                  rotation: list,
-                 logger: AppLogger):
+                 logger: AppLogger.get_logger):
         self.voltage = voltage
         self.tachometer = tachometer
         self.rotation = rotation
