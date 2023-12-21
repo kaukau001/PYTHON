@@ -1,35 +1,41 @@
-from params.calculate_params import area_method, calculate_k_mmq, calculate_kt, calculate_omega_n, calculate_kp, \
-    calculate_ti
 from data.parser import DataParser
-from utils.constants import XLSX_PATH, CSV_PATH
+from utils.constants import XLSX_PATH, CSV_PATH, TACOMETER_VOLTAGE, ARMOR_VOLTAGE, ENGINE_SPEED
+from params.simulation_params_calculator import SimulationParamsCalculator
+from params.calculate_motor_controller_params import CalculateMotorControllerParams
+from utils.logger import AppLogger
+
 if __name__ == '__main__':
+    logger = AppLogger().get_logger()
     xlsx_data = DataParser(XLSX_PATH)
     csv_data = DataParser(CSV_PATH)
-    print(50*'-')
-    print('ANALISANDO DADOS DO EXPERIMENTO')
-    print(50*'-')
-    print('CALCULANDO MÉTODO DOS MÍNIMOS QUADRADOS...')
-    print(50*'-')
-    print('CALCULANDO K:')
-    xlsx_x_axis, xlsx_y_axis = xlsx_data.parse_xlsx('Tensão', 'Tacômetro')
-    k_mmq = calculate_k_mmq(xlsx_x_axis, xlsx_y_axis)
 
-    print('CALCULANDO Kt:')
-    xlsx_x_axis, xlsx_y_axis = xlsx_data.parse_xlsx('Tacômetro', 'Rotação')
-    calculate_kt(xlsx_x_axis, xlsx_y_axis)
+    logger.warning('ANALISANDO DADOS DO EXPERIMENTO')
+    voltage, tachometer, rotation = xlsx_data.parse_xlsx(ARMOR_VOLTAGE, TACOMETER_VOLTAGE, ENGINE_SPEED)
+    logger.info('DADOS DE TENSÃO DE ARMADURA, TENSÃO DO TACÔMETRO E ROTAÇÃO DO MOTOR EXTRAIDOS COM SUCESSO ')
 
-    print(50*'-')
-    print('CALCULANDO MÉTODO DAS ÁREAS...')
-    print(50*'-')
-    csv_x_axis, csv_y_ch1_axis, csv_y_ch2_axis = csv_data.parse_csv()
-    tau, k = area_method(csv_x_axis, csv_y_ch1_axis, csv_y_ch2_axis)
+    logger.warning('INICIANDO ANALISE DOS DADOS PARA A SIMULAÇÃO!')
+    simulation_params = SimulationParamsCalculator(voltage, tachometer, rotation, logger)
 
-    print(50*'-')
-    print('CALCULANDO OS PARAMETROS DE CONTROLE:')
-    print(50*'-')
-    print('CALCULANDO Csi e omega_n:')
-    csi, omega_n = calculate_omega_n(tau)
-    print('CALCULANDO Kp e Ti:')
-    kp = calculate_kp(csi, omega_n, tau, k_mmq)
-    ti = calculate_ti(omega_n, tau, k_mmq, kp)
-    print('RELATÓRIO CONCLUIDO COM SUCESSO!')
+    logger.warning('CALCULANDO MÉTODO DOS MÍNIMOS QUADRADOS!')
+    k_mmq = simulation_params.calculate_k_mmq()
+
+    logger.warning('CALCULANDO Kt!')
+    simulation_params.calculate_kt()
+
+    logger.warning('INICIANDO CÁLCULO DO MÉTODO DAS ÁREAS!')
+
+    x_axis, y_chanel_one_axis, y_chanel_two_axis = csv_data.parse_csv()
+    motor_controller_params = CalculateMotorControllerParams(x_axis, y_chanel_one_axis, y_chanel_two_axis, logger)
+    tau, k = motor_controller_params.area_method()
+
+    logger.warning('INICIANDO CALCULOS DOS PARAMETROS DE CONTROLE!')
+
+    logger.warning('CALCULANDO ZETA E OMEGA_N!')
+    zeta = motor_controller_params.calculate_zeta()
+    omega_n = motor_controller_params.calculate_omega_n(tau, zeta)
+
+    logger.warning('CALCULANDO KP e TI!')
+    kp = motor_controller_params.calculate_kp(k, tau, zeta, omega_n)
+    ti = motor_controller_params.calculate_ti(k, tau, omega_n, kp)
+    logger.warning('RELATÓRIO CONCLUIDO COM SUCESSO!')
+

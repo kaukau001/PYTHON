@@ -1,25 +1,16 @@
-import pandas as pd
 import os
-
+import pandas as pd
+import numpy as np
 from utils.exceptions import InvalidExtensionError
+from utils.logger import AppLogger
 
 
 class DataParser:
-    def __init__(self, file_path):
+    def __init__(self,
+                 file_path: str,
+                 logger: AppLogger.get_logger):
         self.file_path = file_path
-
-    def _check_file_exists(self):
-        if not os.path.exists(self.file_path):
-            raise FileNotFoundError(f"O arquivo {self.file_path} não foi encontrado.")
-
-    def _check_file_extension(self):
-        try:
-            file_name, file_extension = os.path.splitext(self.file_path)
-            if file_extension not in ['.xlsx', '.csv']:
-                raise InvalidExtensionError()
-            return file_extension
-        except InvalidExtensionError as e:
-            print(e.message)
+        self.logger = logger
 
     def parse_csv(self) -> tuple:
         try:
@@ -34,27 +25,20 @@ class DataParser:
             if data.empty:
                 raise ValueError(f"O arquivo {self.file_path} está vazio.")
 
-            index_x = 0
-            index_y_ch1 = 1
-            index_y_ch2 = 2
+            x_axis, y_chanel_one_axis, y_chanel_two_axis = self._extract_data_columns(data)
 
-            x_axis = data.iloc[:, index_x]
-            y_ch1_axis = data.iloc[:, index_y_ch1]
-            y_ch2_axis = data.iloc[:, index_y_ch2]
+            linearized_x_axis = self._linearize_data(x_axis)[0]
+            linearized_y_chanel_one_axis = self._linearize_data(y_chanel_one_axis)[0]
+            linearized_y_chanel_two_axis = self._linearize_data(y_chanel_two_axis)[0]
 
-            linearized_x_axis = x_axis - x_axis.iloc[0]
-            linearized_y_ch1_axis = y_ch1_axis - y_ch1_axis.iloc[0]
-            linearized_y_ch2_axis = y_ch2_axis - y_ch2_axis.iloc[0]
+            return linearized_x_axis, linearized_y_chanel_one_axis, linearized_y_chanel_two_axis
 
-            return linearized_x_axis, linearized_y_ch1_axis, linearized_y_ch2_axis
         except InvalidExtensionError as e:
-            print(e.message)
+            self.logger.error(f"Erro ao processar o arquivo: {e}")
         except ValueError as e:
-            print(e)
+            self.logger.error(f"Erro ao processar o arquivo: {e}")
 
-    def parse_xlsx(self, x_column: list,
-                   y_column: list,
-                   z_column: list or None = None) -> tuple:
+    def parse_xlsx(self, x_column: str, y_column: str, z_column: str or None = None) -> tuple:
         try:
             self._check_file_exists()
             file_extension = self._check_file_extension()
@@ -66,24 +50,52 @@ class DataParser:
             if data.empty:
                 raise ValueError(f"O arquivo {self.file_path} está vazio.")
 
-            if (x_column not in data.columns
-                    or y_column not in data.columns
-                    or (z_column not in data.columns and z_column is not None)):
+            if not all(col in data.columns for col in (x_column, y_column)):
                 raise ValueError("As colunas especificadas não existem no conjunto de dados.")
 
-            x_axis = data[x_column]
-            y_axis = data[y_column]
+            if z_column is not None:
+                if z_column not in data.columns:
+                    raise ValueError("A coluna z especificada não existe no conjunto de dados.")
 
-            linearized_x = x_axis - x_axis.iloc[0]
-            linearized_y = y_axis - y_axis.iloc[0]
-
-            if z_column:
-                z_axis = data[z_column]
-                linearized_z = z_axis - z_axis.iloc[0]
+                x_axis, y_axis, z_axis = data[x_column], data[y_column], data[z_column]
+                linearized_x, linearized_y, linearized_z = self._linearize_data(x_axis, y_axis, z_axis)
                 return linearized_x, linearized_y, linearized_z
 
+            x_axis, y_axis = data[x_column], data[y_column]
+            linearized_x, linearized_y = self._linearize_data(x_axis, y_axis)
+
             return linearized_x, linearized_y
+
         except InvalidExtensionError as e:
-            print(e.message)
+            self.logger.error(f"Erro ao processar o arquivo: {e}")
         except ValueError as e:
-            print(e)
+            self.logger.error(f"Erro ao processar o arquivo: {e}")
+
+    def _check_file_exists(self):
+        if not os.path.exists(self.file_path):
+            raise FileNotFoundError(f"O arquivo {self.file_path} não foi encontrado.")
+
+    def _check_file_extension(self):
+        try:
+            file_name, file_extension = os.path.splitext(self.file_path)
+            if file_extension not in ['.xlsx', '.csv']:
+                raise InvalidExtensionError()
+            return file_extension
+        except InvalidExtensionError as e:
+            self.logger.error(e.message)
+
+    @staticmethod
+    def _extract_data_columns(data):
+        index_x = 0
+        index_y_ch1 = 1
+        index_y_ch2 = 2
+
+        x_axis = data.iloc[:, index_x]
+        y_chanel_one_axis = data.iloc[:, index_y_ch1]
+        y_chanel_two_axis = data.iloc[:, index_y_ch2]
+
+        return x_axis, y_chanel_one_axis, y_chanel_two_axis
+
+    @staticmethod
+    def _linearize_data(*axes):
+        return tuple(np.array(axis) - np.array(axis.iloc[0]) for axis in axes)
