@@ -130,8 +130,6 @@ class DataAnalysisInterface:
             self.log_text.insert(tk.END, result.stdout)
             self.log_text.insert(tk.END, result.stderr)
 
-            print("Relatório gerado com sucesso!")
-
         except Exception as e:
             self.logger.error(f"Erro ao gerar o relatório: {e}")
 
